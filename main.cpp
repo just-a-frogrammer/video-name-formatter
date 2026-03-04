@@ -66,9 +66,53 @@ int main() {
                 current_object[info_position+2] <<
                 "E" <<
                 current_object[info_position+4] <<
-                current_object[info_position+5] << "\n";
+                current_object[info_position+5];
+
+            cout << " Original name: " << current_object  << "\n";
         }
         
+    }
+
+    cout << "Do you want to proceed with changing names of episodes?\n";
+    cout << "yes(1) / no(2)\n>";
+    cin >> user_answear;
+
+    correct = false;
+    switch (user_answear){
+        case 1:
+            correct = true;
+            break;
+        case 2:
+            break;
+        default:
+            cout << "Please next time type 1 or 2.";
+    }
+
+    if (correct == true){
+        for (const auto& entry : fs::directory_iterator(directory_path)) {
+            string full_path = entry.path().string();
+            
+            size_t s_pos = full_path.find("S");
+            size_t e_pos = full_path.find("E");
+
+            if (s_pos != string::npos && e_pos != string::npos) {
+                //Getting SxxExx format
+                string short_name = full_path.substr(s_pos, 6);
+
+                //Getting extension
+                string ext = entry.path().extension().string();
+
+                //Building full path
+                fs::path new_path = fs::path(directory_path) / (short_name + ext);
+
+                try {
+                    fs::rename(entry.path(), new_path);
+                    cout << "Renamed: " << entry.path().filename() << " -> " << short_name + ext << "\n";
+                } catch (const fs::filesystem_error& e) {
+                    cerr << "Error occured: " << e.what() << "\n";
+                }
+            }
+        }
     }
 
     return 0;
