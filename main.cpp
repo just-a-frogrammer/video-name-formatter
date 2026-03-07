@@ -14,13 +14,17 @@ string directory_path;
 int user_answear;
 string current_object;
 
+//getting directory path
 string get_directory_path(){
     cout << "Enter path to the directory: ";
     cin >> directory_path;
     return directory_path;
 }
 
+
 int main() {
+
+    //getting correct path from user
     while (correct != true){
         directory_path = get_directory_path();
         cout << "Is this path correct?\n";
@@ -28,14 +32,8 @@ int main() {
         cout << "yes(1) / no(2)\n>";
         cin >> user_answear;
 
-        switch (user_answear){
-            case 1:
-                correct = true;
-                break;
-            case 2:
-                break;
-            default:
-                cout << "Please next time type 1 or 2.";
+        if (user_answear == 1){
+            correct = true;
         }
     }
 
@@ -43,24 +41,14 @@ int main() {
     cout << "Directory entries: \n";
 
     fs::directory_iterator koniec;
+    //searching for potencial episodes
     for (fs::directory_iterator it(directory_path); it != koniec; ++it) {
         current_object = it->path();
 
-        //printing path
-        //std::cout << it->path() << "\n";
-        
-        //printing extension
-        if (it->path().has_extension()) {
-            //cout << "Extentsion: " << it->path().extension() << "\n\n";
-            cout << "";
-        }else{
-            //skipping non files
-            //cout << "Extension: NOT A FILE!\n\n";
-            cout << "";
-        }
-
+        //extracting Season number and episode number from filename
         if (current_object.find("S") != string::npos && current_object.find("E") != string::npos){
             int info_position = current_object.find("S");
+
             cout << "Found possible episode: S" << 
                 current_object[info_position+1] <<
                 current_object[info_position+2] <<
@@ -70,50 +58,46 @@ int main() {
 
             cout << " Original name: " << current_object  << "\n";
         }
-        
     }
 
     cout << "Do you want to proceed with changing names of episodes?\n";
     cout << "yes(1) / no(2)\n>";
     cin >> user_answear;
 
-    correct = false;
-    switch (user_answear){
-        case 1:
-            correct = true;
-            break;
-        case 2:
-            break;
-        default:
-            cout << "Please next time type 1 or 2.";
-    }
-
-    if (correct == true){
+    if (user_answear == 1){
+        //proceeding if user agrees
         for (const auto& entry : fs::directory_iterator(directory_path)) {
             string full_path = entry.path().string();
             
+            //establishing position of Episode and Season numbers
             size_t s_pos = full_path.find("S");
             size_t e_pos = full_path.find("E");
 
-            if (s_pos != string::npos && e_pos != string::npos) {
-                //Getting SxxExx format
-                string short_name = full_path.substr(s_pos, 6);
+            
+            //Getting SxxExx format
+            string short_name = full_path.substr(s_pos, 6);
 
-                //Getting extension
-                string ext = entry.path().extension().string();
+            //Getting extension
+            string ext = entry.path().extension().string();
 
-                //Building full path
-                fs::path new_path = fs::path(directory_path) / (short_name + ext);
+            //Building full path
+            fs::path new_path = fs::path(directory_path) / (short_name + ext);
 
-                try {
-                    fs::rename(entry.path(), new_path);
-                    cout << "Renamed: " << entry.path().filename() << " -> " << short_name + ext << "\n";
-                } catch (const fs::filesystem_error& e) {
-                    cerr << "Error occured: " << e.what() << "\n";
-                }
+            //trying to rename
+            try {
+                fs::rename(entry.path(), new_path);
+                //succes
+                cout << "Renamed: " << entry.path().filename() << " -> " << short_name + ext << "\n";
+            } catch (const fs::filesystem_error& e) {
+                //failure
+                cerr << "Error occured: " << e.what() << "\n";
             }
         }
+    }else{
+        //quitting with non 0 exit code
+        return 1;
     }
 
+    //quitting program
     return 0;
 }
